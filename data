@@ -1,0 +1,18 @@
+---
+claimed_at: 2026-08-27T18:05:02Z
+claimed_by: www-mikrotik-release-checker
+class: standard
+completed: 2026-08-27T18:05:02Z
+created: 2026-08-27T04:09:19Z
+id: 5
+priority: low
+started: 2026-08-27T18:05:02Z
+status: done
+tags:
+- phase-3
+- release
+title: 'Phase 3: release readiness audit'
+updated: 2026-08-27T18:05:02Z
+---
+
+Run www-mikrotik-release-checker: cpanfile, $VERSION, ABSTRACT, Changes, git tree clean, dzil build/test. Release itself only by the maintainer.
