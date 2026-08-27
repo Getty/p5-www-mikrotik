@@ -92,11 +92,11 @@ Skill `perl-www-mikrotik`.
 
 ## Phase 3 — Release-Vorbereitung
 
-- [ ] `Changes` unter `{{$NEXT}}` vollständig
+- [x] `Changes` unter `{{$NEXT}}` vollständig
 - [x] `README.md` aus SYNOPSIS aktualisieren
-- [ ] `dzil build` + `dzil test` sauber; `git status` leer (Git::GatherDir nimmt nur
+- [x] `dzil build` + `dzil test` sauber; `git status` leer (Git::GatherDir nimmt nur
       getrackte Dateien mit)
-- [ ] `www-mikrotik-release-checker` laufen lassen
+- [x] `www-mikrotik-release-checker` laufen lassen
 - [ ] Release **nur durch den Maintainer**
 
 ## Später / bewusst offen

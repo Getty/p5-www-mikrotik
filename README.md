@@ -12,7 +12,7 @@ my $mt = WWW::MikroTik->new(
   host       => '192.168.88.1',
   user       => 'admin',
   password   => $ENV{MIKROTIK_PASSWORD},
-  verify_ssl => 0,   # self-signed lab router
+  verify_ssl => 0,                    # lab router, self-signed
 );
 
 my $addrs = $mt->list('/ip/address', interface => 'ether2');
@@ -20,7 +20,10 @@ my $new   = $mt->add('/ip/address', address => '10.0.0.5/24', interface => 'ethe
 $mt->set('/ip/address', $new->{'.id'}, comment => 'uplink');
 $mt->remove('/ip/address', $new->{'.id'});
 
+my ($res) = @{ $mt->cmd('/system/resource/print') };
 my $pings = $mt->cmd('/ping', address => '10.0.0.1', count => '4');
+my $ifs   = $mt->print('/interface', proplist => [qw( name type )],
+                       query => [ 'type=ether', 'type=vlan', '#|' ]);
 ```
 
 All values are strings in both directions (`"disabled":"false"`, never a
