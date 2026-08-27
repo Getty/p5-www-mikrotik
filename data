@@ -1,0 +1,18 @@
+---
+claimed_at: 2026-08-27T04:27:54Z
+claimed_by: www-mikrotik-worker
+class: standard
+completed: 2026-08-27T04:27:54Z
+created: 2026-08-27T04:09:18Z
+id: 2
+priority: high
+started: 2026-08-27T04:21:20Z
+status: done
+tags:
+- phase-1
+- lib
+title: 'Phase 1b: HTTP verbs and RouterOS verbs'
+updated: 2026-08-27T04:27:54Z
+---
+
+get/put/patch/delete/post as one-liners on request(); list/add/set/remove/cmd/print with the mapping from skill perl-www-mikrotik (add = PUT, set = PATCH, cmd = POST, print = POST $path/print with .proplist/.query). Depends on Phase 1a. Agent: www-mikrotik-worker.
