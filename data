@@ -1,0 +1,18 @@
+---
+claimed_at: 2026-08-27T04:45:39Z
+claimed_by: www-mikrotik-doc-writer
+class: standard
+completed: 2026-08-27T04:45:39Z
+created: 2026-08-27T04:09:19Z
+id: 4
+priority: medium
+started: 2026-08-27T04:36:38Z
+status: done
+tags:
+- phase-1
+- docs
+title: 'Phase 1c: POD for WWW::MikroTik and README sync'
+updated: 2026-08-27T04:45:39Z
+---
+
+Inline =attr/=method POD, verb table, the strings-only and .id facts, 60 s timeout under cmd, ua as seam. README.md mirrors SYNOPSIS. Agent: www-mikrotik-doc-writer.
