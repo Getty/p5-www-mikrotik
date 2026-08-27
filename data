@@ -1,0 +1,14 @@
+---
+class: standard
+created: 2026-08-27T04:37:18Z
+id: 7
+priority: low
+status: backlog
+tags:
+- lib
+- verify
+title: cmd() sends an empty JSON object body for argument-less commands
+updated: 2026-08-27T04:37:18Z
+---
+
+Needs confirmation against a real router: cmd()/print()/add() always JSON-encode { %data }, so cmd("/system/resource/print") goes out as POST with Content-Type: application/json and body {}, while the vendor curl example in .claude/skills/perl-www-mikrotik/references/rest-api.md passes no --data at all. Current behaviour is asserted (green, documenting actual behaviour) in t/20-verbs.t: "cmd with no args still sends a JSON object body". If RouterOS rejects an empty-object body on such commands, request() has to skip the body when the hash is empty. Raised by www-mikrotik-test-writer during phase 2.
