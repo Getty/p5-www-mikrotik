@@ -1,0 +1,18 @@
+---
+claimed_at: 2026-08-27T04:36:38Z
+claimed_by: www-mikrotik-test-writer
+class: standard
+completed: 2026-08-27T04:36:38Z
+created: 2026-08-27T04:09:19Z
+id: 3
+priority: high
+started: 2026-08-27T04:09:26Z
+status: done
+tags:
+- phase-2
+- tests
+title: 'Phase 2: MockUA and router-free test suite'
+updated: 2026-08-27T04:36:38Z
+---
+
+t/lib/Test/WWW/MikroTik/MockUA.pm (routes + recorded requests), then t/10-request.t, t/20-verbs.t, t/30-responses.t, t/40-print.t asserting the wire (method, URL, headers, body bytes). Fixtures verbatim from .claude/skills/perl-www-mikrotik/references/rest-api.md. Optional t/90-live.t gated on MIKROTIK_TEST_HOST, read-only. Agent: www-mikrotik-test-writer.
