@@ -1,0 +1,18 @@
+{"action":"create","agent":"Torsten Raudssus","detail":"backlog","task_id":1,"ts":"2026-08-27T04:09:18Z"}
+{"action":"create","agent":"Torsten Raudssus","detail":"backlog","task_id":2,"ts":"2026-08-27T04:09:18Z"}
+{"action":"create","agent":"Torsten Raudssus","detail":"backlog","task_id":3,"ts":"2026-08-27T04:09:19Z"}
+{"action":"create","agent":"Torsten Raudssus","detail":"backlog","task_id":4,"ts":"2026-08-27T04:09:19Z"}
+{"action":"create","agent":"Torsten Raudssus","detail":"backlog","task_id":5,"ts":"2026-08-27T04:09:19Z"}
+{"action":"move","agent":"Torsten Raudssus","detail":"todo","task_id":1,"ts":"2026-08-27T04:09:26Z"}
+{"action":"move","agent":"Torsten Raudssus","detail":"todo","task_id":3,"ts":"2026-08-27T04:09:26Z"}
+{"action":"move","agent":"www-mikrotik-worker","detail":"in-progress","task_id":1,"ts":"2026-08-27T04:21:19Z"}
+{"action":"move","agent":"www-mikrotik-worker","detail":"in-progress","task_id":2,"ts":"2026-08-27T04:21:20Z"}
+{"action":"move","agent":"www-mikrotik-test-writer","detail":"in-progress","task_id":3,"ts":"2026-08-27T04:21:20Z"}
+{"action":"move","agent":"www-mikrotik-worker","detail":"done","task_id":1,"ts":"2026-08-27T04:27:54Z"}
+{"action":"move","agent":"www-mikrotik-worker","detail":"done","task_id":2,"ts":"2026-08-27T04:27:54Z"}
+{"action":"create","agent":"Torsten Raudssus","detail":"backlog","task_id":6,"ts":"2026-08-27T04:27:58Z"}
+{"action":"move","agent":"www-mikrotik-test-writer","detail":"done","task_id":3,"ts":"2026-08-27T04:36:38Z"}
+{"action":"move","agent":"www-mikrotik-doc-writer","detail":"in-progress","task_id":4,"ts":"2026-08-27T04:36:38Z"}
+{"action":"create","agent":"Torsten Raudssus","detail":"backlog","task_id":7,"ts":"2026-08-27T04:37:18Z"}
+{"action":"move","agent":"www-mikrotik-doc-writer","detail":"done","task_id":4,"ts":"2026-08-27T04:45:39Z"}
+{"action":"move","agent":"www-mikrotik-release-checker","detail":"done","task_id":5,"ts":"2026-08-27T18:05:02Z"}
