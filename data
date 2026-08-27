@@ -1,0 +1,18 @@
+---
+claimed_at: 2026-08-27T04:27:54Z
+claimed_by: www-mikrotik-worker
+class: standard
+completed: 2026-08-27T04:27:54Z
+created: 2026-08-27T04:09:18Z
+id: 1
+priority: high
+started: 2026-08-27T04:09:26Z
+status: done
+tags:
+- phase-1
+- lib
+title: 'Phase 1a: WWW::MikroTik request() core'
+updated: 2026-08-27T04:27:54Z
+---
+
+Attributes (host, user, password, scheme, port, verify_ssl, timeout, base_url, ua, _json) and request($method, $path, $body, %query): URL join with unencoded .id segments, query string, Basic auth, JSON body, decode, croak on >= 400 with {error,message,detail}. Spec: TODO.md Phase 1. Agent: www-mikrotik-worker.
