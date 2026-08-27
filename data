@@ -1,0 +1,14 @@
+---
+class: standard
+created: 2026-08-27T04:27:58Z
+id: 6
+priority: low
+status: backlog
+tags:
+- lib
+- verify
+title: URI->query_form percent-encodes ',' and '/' in query values
+updated: 2026-08-27T04:27:58Z
+---
+
+Needs confirmation against a real router, not a mock: _uri() builds the query via URI->query_form, which percent-encodes "," and "/" (?.proplist=address%2Cdisabled, ?address=10.0.0.111%2F24), while the vendor examples in .claude/skills/perl-www-mikrotik/references/rest-api.md show those characters raw. Standard HTTP decoding should make this a non-issue and TODO.md prescribes query_form, so it stays as is for now. If a real RouterOS box rejects it, _uri() has to build the query string itself. Raised by www-mikrotik-worker during phase 1.
