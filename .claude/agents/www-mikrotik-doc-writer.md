@@ -6,7 +6,7 @@ allowed-tools: Read, Edit, Grep, Glob
 briefing:
   skills:
     - getty-perl-release-author-getty
-    - perl-www-mikrotik
+    - www-mikrotik-core
 ---
 
 You write POD for **WWW::MikroTik**, an `[@Author::GETTY]` Dist::Zilla distribution. The

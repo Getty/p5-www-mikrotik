@@ -24,6 +24,6 @@ the principle, the lanes and this repo's hazards are in `.claude/rules/www-mikro
 
 The agents carry their conventions via `briefing.skills` (see `.claude/agents/`); the
 main agent delegates rather than loading them. Skill sources live in `.claude/skills/` —
-`perl-www-mikrotik` is this repo's own (the REST API and the module's intended shape),
+`www-mikrotik-core` is this repo's own (the REST API and the module's intended shape),
 the rest are hardlinks from the shared library (edit them only via `manage-skills`, never
 with Edit/Write). Work is tracked on the local `karr` board.

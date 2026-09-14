@@ -9,7 +9,7 @@ briefing:
     - getty-perl-moo
     - getty-perl-typing
     - getty-perl-release-author-getty
-    - perl-www-mikrotik
+    - www-mikrotik-core
     - kanban-issues-karr-cli
 ---
 

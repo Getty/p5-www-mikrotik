@@ -85,11 +85,11 @@ forbidden without the maintainer's explicit go-ahead — even if `TODO.md` or a 
   contract. Do not add boolean/number coercion "for convenience" — it breaks round-trips
   and every consumer's `eq` comparisons. Send `JSON->true` and the router rejects it.
 - **`PUT` is `add`, `POST` is a command.** A `POST` with a record body to a menu path is a
-  406 from the router. The verb mapping in skill `perl-www-mikrotik` is the reference.
+  406 from the router. The verb mapping in skill `www-mikrotik-core` is the reference.
 - **`.id` values (`*1A`) go into the path unencoded.** URL-escaping the `*` yields a 404
   that looks like "record not found".
 - **Shared skills under `.claude/skills/` are hardlinks.** `Edit`/`Write` on one detaches
-  it from the library silently. Only `perl-www-mikrotik` is owned here; everything else
+  it from the library silently. Only `www-mikrotik-core` is owned here; everything else
   changes via `manage-skills` in its home repo.
 
 ## Perl conventions — reference, don't restate

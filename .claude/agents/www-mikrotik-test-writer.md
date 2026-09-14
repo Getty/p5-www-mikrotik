@@ -6,7 +6,7 @@ allowed-tools: Read, Edit, Write, Bash, Glob, Grep
 briefing:
   skills:
     - getty-perl-core
-    - perl-www-mikrotik
+    - www-mikrotik-core
     - kanban-issues-karr-cli
 ---
 
@@ -34,7 +34,7 @@ spec — build it first, in `t/lib/Test/WWW/MikroTik/MockUA.pm`, and `git add` i
 gathers only tracked files).
 
 Fixtures come verbatim from the vendor examples in
-`.claude/skills/perl-www-mikrotik/references/rest-api.md` — string-valued JSON, `.id` as
+`.claude/skills/www-mikrotik-core/references/rest-api.md` — string-valued JSON, `.id` as
 `*<hex>`, error bodies `{error,message,detail}`. Inline them in the test; there is no
 `t/fixtures/` directory unless a fixture is genuinely reused.
 

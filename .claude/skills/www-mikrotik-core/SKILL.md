@@ -1,5 +1,5 @@
 ---
-name: perl-www-mikrotik
+name: www-mikrotik-core
 description: "Use when talking to a MikroTik / RouterOS router from Perl — WWW::MikroTik, the RouterOS REST API under /rest, .id values like *1A, .proplist / .query, print/add/set/remove over HTTP, or why every JSON value comes back as a string."
 user-invocable: false
 allowed-tools: Read, Grep, Glob
