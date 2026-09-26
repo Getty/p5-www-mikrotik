@@ -2,7 +2,6 @@
 name: www-mikrotik-worker
 description: "Default WWW::MikroTik worker — implement, refactor, debug and test the RouterOS REST client in this distribution. Owns lib/WWW/MikroTik.pm: request building, Basic auth, JSON handling, the get/put/patch/delete/post verbs and the list/add/set/remove/cmd/print RouterOS verbs. Pre-loaded with Getty's Perl house rules, Moo and typing patterns, the RouterOS REST API and the PodWeaver POD format. Leaves a commit-ready tree; never commits — commits belong to www-mikrotik-release-manager."
 model: inherit
-allowed-tools: Read, Edit, Write, Bash, Glob, Grep
 briefing:
   skills:
     - getty-perl-core

@@ -2,7 +2,7 @@
 name: www-mikrotik-doc-writer
 description: "Write and maintain WWW::MikroTik POD in the @Author::GETTY PodWeaver house format (inline =attr/=method, =seealso, # ABSTRACT) and keep README.md in step with the SYNOPSIS. Documentation only; specify the files to work on."
 model: sonnet
-allowed-tools: Read, Edit, Grep, Glob
+disallowedTools: Write, NotebookEdit, Bash
 briefing:
   skills:
     - www-mikrotik-core

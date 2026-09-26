@@ -2,7 +2,6 @@
 name: www-mikrotik-test-writer
 description: "Write and extend WWW::MikroTik tests in t/. Router-free by construction: every test injects the Test::WWW::MikroTik::MockUA user agent and asserts the wire (method, URL, headers, body) plus the decoded result. Use for test additions, regression scaffolding and reproducing reported bugs."
 model: sonnet
-allowed-tools: Read, Edit, Write, Bash, Glob, Grep
 briefing:
   skills:
     - getty-perl-core

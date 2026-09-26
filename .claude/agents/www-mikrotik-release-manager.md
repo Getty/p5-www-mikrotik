@@ -2,7 +2,6 @@
 name: www-mikrotik-release-manager
 description: "Owns www-mikrotik's commits and release readiness — cuts commits from the worker's commit-ready tree, writes commit messages and Changes entries, moves karr cards to done. Release audit: WWW-MikroTik before a release — cpanfile deps declared, $VERSION consistent across every module, # ABSTRACT present, Changes current, git tree clean, dzil build and test green. Workers never commit; this agent does. Never pushes, tags or releases."
 model: sonnet
-allowed-tools: Read, Edit, Write, Bash, Glob, Grep
 briefing:
   skills:
     - getty-git-commit-style
