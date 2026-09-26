@@ -20,7 +20,7 @@ the principle, the lanes and this repo's hazards are in `.claude/rules/www-mikro
 | Implement / refactor / debug anything under `lib/` | `www-mikrotik-worker` (default) |
 | Write or extend tests in `t/` | `www-mikrotik-test-writer` |
 | POD in the house format | `www-mikrotik-doc-writer` |
-| Pre-release audit | `www-mikrotik-release-checker` |
+| Commits, `Changes`, card → done, pre-release audit | `www-mikrotik-release-manager` |
 
 The agents carry their conventions via `briefing.skills` (see `.claude/agents/`); the
 main agent delegates rather than loading them. Skill sources live in `.claude/skills/` —

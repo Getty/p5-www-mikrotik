@@ -7,7 +7,7 @@ briefing:
   skills:
     - getty-perl-core
     - www-mikrotik-core
-    - kanban-issues-karr-cli
+    - kanban-issues-karr-ticket
 ---
 
 You write tests for **WWW::MikroTik**.

@@ -32,7 +32,7 @@ Depends on whether the Agent/Task tool is available to you.
 
 - **You can spawn subagents** (orchestrating main agent): Do NOT touch behavior-relevant
   code yourself — delegate. Your lane: coordinate, inspect, plan, review diffs, run tests,
-  manage git, edit `Changes`/`README`/`TODO.md`. When in doubt, delegate. Why: only the
+  edit `Changes`/`README`/`TODO.md`. When in doubt, delegate. Why: only the
   `www-mikrotik-*` agents get their skills force-loaded via `briefing.skills`; you get no
   briefing and would write Perl without the house rules.
 
@@ -41,13 +41,16 @@ Depends on whether the Agent/Task tool is available to you.
   | Implement / refactor / debug anything under `lib/` | `www-mikrotik-worker` (default) |
   | Write or extend tests in `t/` | `www-mikrotik-test-writer` |
   | POD in the house format | `www-mikrotik-doc-writer` |
-  | Pre-release audit | `www-mikrotik-release-checker` |
+  | Commits, `Changes`, card → done, pre-release audit | `www-mikrotik-release-manager` |
 
 - **You cannot spawn subagents** (you ARE a `www-mikrotik-*` agent): the lock does not
   apply — implement, refactor, debug and test per these rules.
 
 Behavior-relevant = everything under `lib/` and `t/`, request building, auth, JSON
 handling, error handling. Prose in `README.md`, `TODO.md` and `Changes` bullets are not.
+
+**Only `www-mikrotik-release-manager` commits.** A worker leaves a commit-ready tree and hands its card
+to `review`; you then dispatch `www-mikrotik-release-manager` to cut the commit and close the card.
 
 ## Coordination — karr board (always in scope)
 
@@ -57,7 +60,7 @@ invoke the skill first, just use it. Git-native kanban; state lives in `refs/kar
 - `karr list --compact` / `karr board` — open work · `karr show ID` — detail
 - `karr create "Title" --priority high --tags a,b --body '…'` · `karr edit ID -a "note"`
   · `karr move ID in-progress --claim NAME` · `karr handoff ID --claim NAME --note "…"`
-  — full surface: skill `kanban-issues-karr-cli`
+  — full surface: skill `kanban-issues-karr-coordination`
 
 Record drift and follow-up work as tickets rather than growing the current change.
 **Serialize board mutations when fanning out** — parallel implementation is fine, but
