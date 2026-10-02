@@ -239,12 +239,13 @@ sub request {
   my $uri = $self->_uri($path, %query);
   my $req = HTTP::Request->new($method => $uri);
   $req->authorization_basic($self->user, $self->password);
-  $log->debug($method.' '.$uri->as_string);
+  $log->debug($method.' '.$self->_uri($path, %{ $self->_masked({ %query }) })->as_string)
+    if $log->is_debug;
   if (defined $body) {
-    my $content = $self->_json->encode($body);
     $req->content_type('application/json');
-    $req->content($content);
-    $log->debug('Body: '.$content);
+    $req->content($self->_json->encode($body));
+    $log->debug('Body: '.$self->_json->encode($self->_masked($body)))
+      if $log->is_debug;
   }
   my $res = $self->ua->request($req);
   $log->info($method.' '.$path.' -> '.$res->code);
@@ -504,6 +505,16 @@ sub _croak {
   my ( $self, $message ) = @_;
   $log->error('WWW::MikroTik: '.$message);
   croak 'WWW::MikroTik: '.$message;
+}
+
+# Copy of a request body or query hash for the debug log, with the values of
+# password-like top-level keys replaced. Never what goes on the wire.
+sub _masked {
+  my ( $self, $data ) = @_;
+  return $data unless ref $data eq 'HASH';
+  return { map {
+    ( $_ => /password|passphrase|secret|pre-?shared-key|private-key/i ? '***' : $data->{$_} )
+  } keys %$data };
 }
 
 =seealso
