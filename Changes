@@ -17,6 +17,8 @@ Revision history for WWW-MikroTik
       prefix, the status line and the decoder's reason
     - ua attribute as the seam for a custom or mock user agent; request
       logging through Log::Any
-    - Password-like fields (password, passphrase, secret, pre-shared-key,
-      private-key) are masked in the debug log; the request itself is
-      sent unchanged
+    - Secret-looking fields are masked in the debug log: any top-level body
+      key or query parameter whose name contains password, passphrase,
+      secret, token or psk, or is key or ends in -key (private-key,
+      pre-shared-key, auth-key, ...), except public-key; the request itself
+      is sent unchanged

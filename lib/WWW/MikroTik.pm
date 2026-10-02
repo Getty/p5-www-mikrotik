@@ -73,16 +73,20 @@ There is no error class; catch with C<eval> or L<Try::Tiny>.
 
 Logging goes through L<Log::Any>: the request line and the JSON request body
 at C<debug>, C<< <method> <path> -> <status> >> at C<info>, the croak message
-at C<error>. In those two C<debug> lines the value of every top-level body key
-and every query parameter whose name contains C<password>, C<passphrase>,
-C<secret>, C<pre-shared-key>, C<preshared-key> or C<private-key> (in any
-case) is replaced by C<***>; the request sent to the router is unchanged.
-The debug lines are only built when the logger has C<debug> enabled.
-Everything else is logged as sent: a secret under any other name, one inside
-a nested structure or a C<.query> word (C<password=...>), or one in the
-path. The Basic auth credentials and successful response bodies are never
-logged; the C<error> line carries the router's error text and, for a
-non-JSON body, the decoder's reason, which may quote the start of that body.
+at C<error>. In those two C<debug> lines the value of a top-level body key or
+query parameter is replaced by C<***> when its name, in any case, contains
+C<password>, C<passphrase>, C<secret>, C<token> or C<psk>, or is C<key> or
+ends in C<-key> (C<private-key>, C<pre-shared-key>, C<auth-key>,
+C<tcp-md5-key>, ...). The one exception is C<public-key>, which stays
+visible. Names that merely resemble these - C<passthrough>, C<keepalive>,
+C<key-size> - are logged as they are. The request sent to the router is
+unchanged. The debug lines are only built when the logger has C<debug>
+enabled. Everything else is logged as sent: a secret under a name outside
+that rule (an SNMP community's C<name>, say), one inside a nested structure
+or a C<.query> word (C<password=...>), or one in the path. The Basic auth
+credentials and successful response bodies are never logged; the C<error>
+line carries the router's error text and, for a non-JSON body, the decoder's
+reason, which may quote the start of that body.
 
 =cut
 
@@ -514,12 +518,17 @@ sub _croak {
 }
 
 # Copy of a request body or query hash for the debug log, with the values of
-# password-like top-level keys replaced. Never what goes on the wire.
+# secret-looking top-level keys replaced. Never what goes on the wire.
+# Structural, not a list of menus: any name containing password, passphrase,
+# secret, token or psk, and key itself or any name ending in -key
+# (private-key, pre-shared-key, auth-key, tcp-md5-key, ...). public-key is the
+# one exception - a WireGuard public key is not a secret.
 sub _masked {
   my ( $self, $data ) = @_;
   return $data unless ref $data eq 'HASH';
   return { map {
-    ( $_ => /password|passphrase|secret|pre-?shared-key|private-key/i ? '***' : $data->{$_} )
+    ( $_ => /password|passphrase|secret|token|psk|(?:\A|-)key\z/i && !/\Apublic-key\z/i
+      ? '***' : $data->{$_} )
   } keys %$data };
 }
 

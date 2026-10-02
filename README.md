@@ -146,11 +146,15 @@ no error class.
 
 Through `Log::Any`: request line and JSON request body at `debug`,
 `<method> <path> -> <status>` at `info`, the croak message at `error`. In the
-`debug` lines the value of every top-level body key and query parameter whose
-name contains `password`, `passphrase`, `secret`, `pre-shared-key`,
-`preshared-key` or `private-key` is replaced by `***`; the request itself is
-sent unchanged. Secrets under other names, in nested values, in `.query`
-words or in the path are logged as sent. Basic auth credentials and
+`debug` lines the value of a top-level body key or query parameter is
+replaced by `***` when its name, in any case, contains `password`,
+`passphrase`, `secret`, `token` or `psk`, or is `key` or ends in `-key`
+(`private-key`, `pre-shared-key`, `auth-key`, `tcp-md5-key`, ...). The one
+exception is `public-key`, which stays visible; look-alikes such as
+`passthrough`, `keepalive` or `key-size` are not masked. The request itself is
+sent unchanged. Secrets under names outside that rule (an SNMP community's
+`name`, say), in nested values, in `.query` words or in the path are logged as
+sent. Basic auth credentials and
 successful response bodies are never logged; the `error` line carries the
 router's error text and, for a non-JSON body, the decoder's reason, which may
 quote the start of that body.

@@ -74,6 +74,43 @@ subtest 'every password-like key is masked, case-insensitively' => sub {
   like $debug, qr/"comment":"visible"/, 'an ordinary key is logged verbatim';
 };
 
+subtest 'structural rule: token, psk, key and *-key masked; public-key and look-alikes visible' => sub {
+  my @masked = qw(
+    auth-key authentication-key tcp-md5-key static-key psk token KEY key
+  );
+  my @visible = qw(
+    public-key passthrough keepalive key-size name comment
+  );
+  my %data = (
+    ( map { ( $_ => 'leak-'.$_ ) } @masked ),
+    ( map { ( $_ => 'shown-'.$_ ) } @visible )
+  );
+  my $ua = Test::WWW::MikroTik::MockUA->new(
+    routes => { 'POST /rest/some/command' => [], 'GET /rest/some/menu' => [] }
+  );
+  my $mt = _mt(ua => $ua);
+  $log->clear;
+
+  $mt->cmd('/some/command', %data);
+  $mt->list('/some/menu', %data);
+
+  is_deeply $json->decode($ua->requests->[0]->content), { %data },
+    'wire body carries every real value';
+  is_deeply { $ua->requests->[1]->uri->query_form }, { %data },
+    'wire query string carries every real value';
+
+  my $debug = _debug();
+  unlike $debug, qr/leak-/, 'none of the masked values is in the debug log';
+  for my $key (@masked) {
+    like $debug, qr/"\Q$key\E":"\*\*\*"/, $key.' is masked in the body';
+    like $debug, qr/[?&]\Q$key\E=\*\*\*(?:&|$)/m, $key.' is masked in the query string';
+  }
+  for my $key (@visible) {
+    like $debug, qr/"\Q$key\E":"shown-\Q$key\E"/, $key.' is visible in the body';
+    like $debug, qr/[?&]\Q$key\E=shown-\Q$key\E(?:&|$)/m, $key.' is visible in the query string';
+  }
+};
+
 subtest 'the data passed in is not modified' => sub {
   my $ua = Test::WWW::MikroTik::MockUA->new(
     routes => { 'PATCH /rest/user/*1' => { '.id' => '*1' } }
