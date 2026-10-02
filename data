@@ -1,0 +1,25 @@
+---
+claimed_at: 2026-10-02T18:27:03Z
+claimed_by: www-mikrotik-worker
+class: standard
+completed: 2026-10-02T18:27:03Z
+created: 2026-10-02T18:20:05Z
+id: 8
+priority: high
+started: 2026-10-02T18:20:12Z
+status: done
+tags:
+- lib
+- t
+- docs
+- release
+title: 'Release review: docs rework, non-JSON 2xx croak prefix, mask passwords in
+  debug log, dist.ini'
+updated: 2026-10-02T18:27:03Z
+---
+
+Hub job from Getty. (1) Review the uncommitted README/Changes/POD rework against code and house standard. (2) request(): 2xx response with non-JSON body dies with a raw JSON error, no "WWW::MikroTik:" prefix - fix with test. (3) debug log writes request bodies with passwords in clear - mask password fields, test, POD. (4) .t shebang per house convention. (5) t/90-live.t: one read-only call with a query parameter so a later live run settles card 6. (6) dist.ini: author getty@cpan.org, keep irc = #kubernetes, align header; keep TODO.md out of the tarball. No push, no tag, no release. Cards 6 and 7 stay open.
+
+2026-10-02 18:23 Worker: (1) request() croaks 'WWW::MikroTik: <status line>: response body is not JSON: <reason>' on a 2xx non-JSON body, logged at error, via new _croak shared with _croak_response; test in t/30-responses.t. (2) debug log masks values of top-level body keys and query params matching /password|passphrase|secret|pre-?shared-key|private-key/i with *** (new _masked; wire unchanged); test in new t/50-logging.t (git added); POD DESCRIPTION + README Logging updated. Key set deviates from brief by 'preshared-key' (WireGuard peer spelling, no hyphen). (3) No shebang change: getty-perl-core states no shebang convention for .t files. (4) t/90-live.t: read-only arrayref .proplist subtest for card 6, not run live. prove -lr t/: 7 files, 33 tests, PASS, 90-live skipped. Not committed. Also found: other RouterOS secret fields are NOT masked (auth-key, authentication-key, tcp-md5-key, static-key-*, SNMP community name) - candidate for a follow-up card on this board. dist.ini is modified unstaged in the tree, not by me.
+
+2026-10-02 18:26 Committed as 1c857f8 (docs), be39eea (non-JSON 2xx croak), 794be24 (debug-log masking), 6d89450 (test shebangs, live .proplist), 4526956 (dist.ini).
