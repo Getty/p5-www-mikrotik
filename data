@@ -1,0 +1,24 @@
+---
+claimed_at: 2026-10-02T23:43:07Z
+claimed_by: www-mikrotik-worker
+class: standard
+completed: 2026-10-02T23:43:07Z
+created: 2026-10-02T18:27:19Z
+id: 9
+priority: low
+started: 2026-10-02T23:40:40Z
+status: done
+tags:
+- lib
+- security
+title: 'Debug-log masking: secret fields under other names stay in clear'
+updated: 2026-10-02T23:43:07Z
+---
+
+_masked covers keys matching password|passphrase|secret|pre-?shared-key|private-key. Secrets under other names (candidates named from memory, unverified: auth-key, authentication-key, tcp-md5-key, static-key-*, SNMP community), nested values, .query words and the path are logged as sent; the POD says so. Decide whether to widen the pattern (e.g. any key ending in -key) once the names are confirmed against the RouterOS reference.
+
+2026-10-02 23:41 Widened _masked to a structural rule: name contains password|passphrase|secret|token|psk, or is key / ends in -key; public-key is the one exception (stays visible). Test-first in t/50-logging.t (new subtest, red 17 fails -> green; body + query string, wire unchanged; passthrough/keepalive/key-size/public-key visible). POD Logging paragraph + README Logging updated. prove -lr t/ green (90-live skipped). Not moved; Changes/dist.ini untouched.
+
+Worker done: structural masking rule + tests, POD/README; Changes bullet rewritten by orchestrator. prove -lr t/ green (34). Ready to commit.
+
+Committed as d4b75c8 (structural masking rule, t/50-logging.t, POD/README/Changes).
