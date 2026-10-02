@@ -267,8 +267,12 @@ verb, C<$path> the RouterOS console path (a leading C</> is added if
 missing), C<$body> a hashref to JSON-encode as the request body (or
 C<undef> for none), and C<%query> becomes the URL query string - keys
 sorted, an arrayref value joined with commas. Query keys and values are
-form-encoded by L<URI> (C<,> goes out as C<%2C>, C</> as C<%2F>); the path is
-not touched beyond what L<URI> escapes on its own, so a C<*> stays a C<*>.
+form-encoded by L<URI> (C<,> goes out as C<%2C>, C</> as C<%2F>). RouterOS
+decodes these as expected: a C<.proplist> sent as C<address%2Cinterface>
+returned only the requested keys, and a filter on C<address=10.0.0.1/24> sent
+with C<%2F> matched exactly that record (confirmed against RouterOS 7.18.2).
+The path is not touched beyond what L<URI> escapes on its own, so a C<*>
+stays a C<*>.
 
 Sends HTTP Basic auth with C<user>/C<password> on every request. A response
 status of 400 or higher C<croak>s with
@@ -442,7 +446,9 @@ sub cmd {
     my $pings = $mt->cmd('/ping', address => '10.155.101.1', count => '4');
 
 C<post($path, \%args)> - console: any command word, not only C<print>.
-C<%args> is always sent as a JSON object body, even when empty (C<{}>).
+C<%args> is always sent as a JSON object body, even when empty (C<{}>);
+RouterOS accepts that for a command without arguments, e.g.
+C<< $mt->cmd('/system/resource/print') >> (confirmed against RouterOS 7.18.2).
 
 RouterOS enforces a 60 second limit on the underlying HTTP request itself
 and does not stream output. A command with no natural end of its own -

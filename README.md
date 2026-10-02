@@ -177,6 +177,23 @@ MIKROTIK_TEST_VERIFY_SSL=0 \
 `MIKROTIK_TEST_USER` defaults to `admin`, `MIKROTIK_TEST_PASSWORD` to the
 empty string and `MIKROTIK_TEST_VERIFY_SSL` to `0`.
 
+`MIKROTIK_TEST_SCHEME` (`https` or `http`) and `MIKROTIK_TEST_PORT` are
+optional and passed to the constructor as `scheme`/`port` only when set; unset,
+the module defaults apply (`https` on the scheme's standard port). To reach a
+router over plain `http` (RouterOS 7.9 or later, password sent in clear, lab
+network only):
+
+```bash
+MIKROTIK_TEST_HOST=192.168.88.1 \
+MIKROTIK_TEST_SCHEME=http \
+  prove -l t/90-live.t
+```
+
+Against a RB1100AHx4 running RouterOS 7.18.2 over `http` on port 80, this
+confirmed that RouterOS accepts the empty `{}` body `cmd` sends for an
+argument-less command, and understands query values sent percent-encoded
+(`.proplist` as `address%2Cinterface`, a filter value containing `/` as `%2F`).
+
 ## License
 
 This library is free software; you can redistribute it and/or modify it under
