@@ -1,3 +1,4 @@
+#!/usr/bin/env perl
 use strict;
 use warnings;
 use Test::More;
@@ -30,6 +31,21 @@ subtest 'system resource print' => sub {
 subtest 'ip address list' => sub {
   my $addresses = $mt->get('/ip/address');
   is ref $addresses, 'ARRAY', 'listing addresses returns an arrayref';
+};
+
+# karr card 6: _uri builds the query string with URI->query_form, so the comma
+# joining an arrayref goes out as %2C (?.proplist=address%2Cinterface). This
+# settles whether RouterOS accepts that form: if it does not, the call croaks
+# or the records come back with every field instead of the two asked for.
+subtest 'ip address list with an arrayref .proplist (card 6)' => sub {
+  my @wanted    = qw( address interface );
+  my $addresses = $mt->get('/ip/address', '.proplist' => [ @wanted ]);
+  is ref $addresses, 'ARRAY', 'a GET with a comma-joined query value returns an arrayref';
+  my %wanted = map { ( $_ => 1 ) } @wanted;
+  # .id is tolerated: unsure whether RouterOS returns it regardless of .proplist
+  my @extra  = grep { !$wanted{$_} && $_ ne '.id' } map { keys %$_ } @$addresses;
+  is_deeply [ sort @extra ], [], 'records carry only the requested keys'
+    or diag 'RouterOS ignored .proplist sent with %2C - see karr card 6';
 };
 
 done_testing;
