@@ -1,0 +1,20 @@
+---
+class: standard
+completed: 2026-10-02T23:22:13Z
+created: 2026-08-27T04:27:58Z
+id: 6
+priority: low
+started: 2026-10-02T23:22:13Z
+status: done
+tags:
+- lib
+- verify
+title: URI->query_form percent-encodes ',' and '/' in query values
+updated: 2026-10-02T23:22:13Z
+---
+
+Needs confirmation against a real router, not a mock: _uri() builds the query via URI->query_form, which percent-encodes "," and "/" (?.proplist=address%2Cdisabled, ?address=10.0.0.111%2F24), while the vendor examples in .claude/skills/perl-www-mikrotik/references/rest-api.md show those characters raw. Standard HTTP decoding should make this a non-issue and TODO.md prescribes query_form, so it stays as is for now. If a real RouterOS box rejects it, _uri() has to build the query string itself. Raised by www-mikrotik-worker during phase 1.
+
+2026-10-02 18:26 t/90-live.t now has a read-only .proplist arrayref subtest (commit 6d89450); it settles the %2C question on the next live run.
+
+Confirmed live (RouterOS 7.18.2, RB1100AHx4, http/80): .proplist as address%2Cinterface returns only the requested keys; filter value with / sent as %2F matches exactly that record. No change to _uri() needed. Commit 40fe28b.
