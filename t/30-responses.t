@@ -2,6 +2,8 @@ use strict;
 use warnings;
 use Test::More;
 use Test::Fatal qw( exception );
+use Log::Any::Test;
+use Log::Any qw( $log );
 use lib 't/lib';
 
 use HTTP::Response;
@@ -117,6 +119,31 @@ subtest 'error: 400 Bad Request / "Session closed" (60s timeout), key order in t
   ok $err, 'cmd croaked';
   like $err, qr/\AWWW::MikroTik: 400 Bad Request: Session closed/,
     'a request-timeout error surfaces as a normal error croak';
+};
+
+subtest 'error: 2xx with a non-JSON body croaks with the module prefix, not the raw decoder error' => sub {
+  my $html = HTTP::Response->new(200, 'OK', [ 'Content-Type' => 'text/html' ],
+    '<html><body>captive portal</body></html>');
+  my $ua = Test::WWW::MikroTik::MockUA->new(
+    routes => { 'GET /rest/ip/address' => $html }
+  );
+  my $mt = _mt(ua => $ua);
+  $log->clear;
+
+  my $file = __FILE__;
+  my $err  = exception { $mt->get('/ip/address') }; my $line = __LINE__;
+  ok $err, 'get croaked';
+  like $err, qr/\AWWW::MikroTik: 200 OK: response body is not JSON: \S/,
+    'prefix, HTTP status line, what is wrong, and the decoder reason';
+  like $err, qr/ at \Q$file\E line $line\.\n\z/, 'reported from the caller';
+  is scalar( () = $err =~ / line \d+/g ), 1,
+    'exactly one source location - the decoder\'s own " at ... line N." is trimmed';
+
+  my ( $logged ) = grep { $_->{level} eq 'error' } @{ $log->msgs };
+  ok $logged, 'logged at error';
+  like $logged->{message}, qr/\AWWW::MikroTik: 200 OK: response body is not JSON: \S/,
+    'the error log line is the croak message';
+  unlike $logged->{message}, qr/ line \d+/, 'without a source location';
 };
 
 done_testing;

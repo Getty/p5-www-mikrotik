@@ -251,7 +251,10 @@ sub request {
   $self->_croak_response($res) if $res->code >= 400;
   my $content = $res->content;
   return unless defined $content && length $content;
-  return $self->_json->decode($content);
+  my $data;
+  return $data if eval { $data = $self->_json->decode($content); 1 };
+  ( my $reason = $@ ) =~ s/\A(.*) at .+? line \d+\.?\s*\z/$1/s;
+  $self->_croak($res->status_line.': response body is not JSON: '.$reason);
 }
 
 =method request
@@ -494,6 +497,11 @@ sub _croak_response {
     ? $res->code.' '.$error->{message}
       .( defined $error->{detail} ? ': '.$error->{detail} : '' )
     : $res->status_line;
+  $self->_croak($message);
+}
+
+sub _croak {
+  my ( $self, $message ) = @_;
   $log->error('WWW::MikroTik: '.$message);
   croak 'WWW::MikroTik: '.$message;
 }
