@@ -2,3 +2,21 @@ Revision history for WWW-MikroTik
 
 {{$NEXT}}
     - Initial release
+    - WWW::MikroTik: a single Moo class for the MikroTik RouterOS REST API
+      (https://<router>/rest), HTTP Basic auth over LWP::UserAgent
+    - RouterOS verbs list, add, set, remove, cmd and print, on top of the
+      plain HTTP verbs get, put, patch, delete and post and the request core
+    - print takes proplist and query for the POST form of the console print
+      (.proplist / .query)
+    - Values pass through as the strings RouterOS sends and expects; nothing
+      is converted in either direction
+    - A response status of 400 or higher croaks with the status, message and
+      detail of the router's JSON error object, or with the HTTP status line
+      when there is none (non-JSON body, unreachable router, TLS error)
+    - A success status with a body that is not JSON croaks with the module
+      prefix, the status line and the decoder's reason
+    - ua attribute as the seam for a custom or mock user agent; request
+      logging through Log::Any
+    - Password-like fields (password, passphrase, secret, pre-shared-key,
+      private-key) are masked in the debug log; the request itself is
+      sent unchanged

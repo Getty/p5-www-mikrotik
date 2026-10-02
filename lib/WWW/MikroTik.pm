@@ -42,22 +42,47 @@ available from RouterOS 7.1. The console path is the API surface: C</ip/address>
 in the console is C<GET /rest/ip/address> on the wire and C<< $mt->get('/ip/address') >>
 here. RouterOS console commands map onto this module one for one:
 
-    Perl method     HTTP method            Console command
-    --------------  ---------------------  -----------------------------
-    list / get      GET                    print
-    add             PUT                    add
-    set             PATCH                  set
-    remove          DELETE                 remove
-    cmd / post      POST                   any command word
-    print           POST to $path/print    print (POST form, for .query)
+    Perl method      HTTP method            Console command
+    ---------------  ---------------------  -----------------------------
+    list / get       GET                    print
+    add / put        PUT                    add
+    set / patch      PATCH                  set
+    remove / delete  DELETE                 remove
+    cmd / post       POST                   any command word
+    print            POST to $path/print    print (POST form, for .query)
+
+The left-hand name of each pair is the RouterOS-flavored method (flat
+C<< key => value >> arguments, the record C<.id> as its own argument), the
+right-hand one the plain HTTP verb underneath (full path, hashref body). All
+of them go through L</request>.
 
 Every RouterOS value is a string in both directions - C<"disabled":"false">,
 C<"cpu-count":"16">. This module does not convert anything, in either direction:
 compare with C<eq> and send C<'true'>/C<'false'>, never JSON booleans.
 
 Failures from status 400 upwards C<croak> with
-C<< WWW::MikroTik: <status> <message>: <detail> >> - the three fields of the
-router's error object. There is no error class.
+C<< WWW::MikroTik: <status> <message>: <detail> >> - the fields of the
+router's JSON error object (C<: E<lt>detailE<gt>> is left out when the router
+sends none). A failure without such an object - a body that is not JSON or has
+no C<message>, or a connection that never got an answer (LWP reports an
+unreachable router or a TLS error as a synthetic C<500> response) - croaks
+with the HTTP status line instead: C<< WWW::MikroTik: <status line> >>. A successful status with a
+body that is not JSON (a captive portal, a proxy's HTML page) croaks with
+C<< WWW::MikroTik: <status line>: response body is not JSON: <reason> >>.
+There is no error class; catch with C<eval> or L<Try::Tiny>.
+
+Logging goes through L<Log::Any>: the request line and the JSON request body
+at C<debug>, C<< <method> <path> -> <status> >> at C<info>, the croak message
+at C<error>. In those two C<debug> lines the value of every top-level body key
+and every query parameter whose name contains C<password>, C<passphrase>,
+C<secret>, C<pre-shared-key>, C<preshared-key> or C<private-key> (in any
+case) is replaced by C<***>; the request sent to the router is unchanged.
+The debug lines are only built when the logger has C<debug> enabled.
+Everything else is logged as sent: a secret under any other name, one inside
+a nested structure or a C<.query> word (C<password=...>), or one in the
+path. The Basic auth credentials and successful response bodies are never
+logged; the C<error> line carries the router's error text and, for a
+non-JSON body, the decoder's reason, which may quote the start of that body.
 
 =cut
 
@@ -152,7 +177,7 @@ has timeout => (
 =attr timeout
 
 LWP request timeout in seconds, passed to C<ua>'s constructor. Defaults to
-C<60>, matching the router's own request timeout (see C<cmd> below) - but
+C<60>, matching the router's own request timeout (see L</cmd>) - but
 this is this client's socket timeout, enforced independently of whatever
 the router does on its end.
 
@@ -198,6 +223,9 @@ responds to C<< ->request($http_request) >> with an L<HTTP::Response> works
 here in its place - which is how the test suite runs the whole client
 against a mock user agent without ever touching a router.
 
+C<timeout> and C<verify_ssl> are only applied when this default is built; an
+object passed in as C<ua> is used exactly as it is.
+
 =cut
 
 has _json => ( is => 'lazy' );
@@ -234,13 +262,22 @@ The method every verb below is a thin wrapper around. C<$method> is an HTTP
 verb, C<$path> the RouterOS console path (a leading C</> is added if
 missing), C<$body> a hashref to JSON-encode as the request body (or
 C<undef> for none), and C<%query> becomes the URL query string - keys
-sorted, an arrayref value joined with commas.
+sorted, an arrayref value joined with commas. Query keys and values are
+form-encoded by L<URI> (C<,> goes out as C<%2C>, C</> as C<%2F>); the path is
+not touched beyond what L<URI> escapes on its own, so a C<*> stays a C<*>.
 
 Sends HTTP Basic auth with C<user>/C<password> on every request. A response
 status of 400 or higher C<croak>s with
 C<< WWW::MikroTik: <status> <message>: <detail> >>, read from the router's
-JSON error object. An empty response body decodes to nothing (C<undef>),
-not an error.
+JSON error object (C<detail> optional), or with
+C<< WWW::MikroTik: <status line> >> when the response body is not a JSON
+object with a C<message>. A status below 400 with a body that
+does not decode as JSON C<croak>s with
+C<< WWW::MikroTik: <status line>: response body is not JSON: <reason> >>.
+
+Returns the decoded JSON response - an arrayref of records or a single
+hashref, depending on the call. An empty response body is not an error: it
+returns C<undef> in scalar context and the empty list in list context.
 
 =cut
 
@@ -254,9 +291,14 @@ sub get {
 =method get
 
     my $addrs = $mt->get('/ip/address', interface => 'ether2');
+    my $addr  = $mt->get('/ip/address/*1A');
+    my $slim  = $mt->get('/ip/address', '.proplist' => [qw( address disabled )]);
 
 C<< request('GET', $path, undef, %query) >>. C<list> is the RouterOS-flavored
-alias for this same call.
+alias for this same call. A menu path returns an arrayref of records; a path
+ending in a record's C<.id> (or its name, on menus that accept one) returns
+that one record as a hashref. C<.proplist> in C<%query> limits the fields
+that come back - comma string or arrayref.
 
 =cut
 
@@ -396,8 +438,7 @@ sub cmd {
     my $pings = $mt->cmd('/ping', address => '10.155.101.1', count => '4');
 
 C<post($path, \%args)> - console: any command word, not only C<print>.
-C<%args> is always sent as a JSON object body, even when empty (C<{}>) -
-unlike the bodiless C<curl> examples in the vendor doc.
+C<%args> is always sent as a JSON object body, even when empty (C<{}>).
 
 RouterOS enforces a 60 second limit on the underlying HTTP request itself
 and does not stream output. A command with no natural end of its own -
