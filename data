@@ -1,0 +1,24 @@
+---
+claimed_at: 2026-10-03T02:13:38Z
+claimed_by: worker
+class: standard
+completed: 2026-10-03T02:13:38Z
+created: 2026-10-03T02:05:49Z
+id: 12
+priority: high
+started: 2026-10-03T02:06:23Z
+status: done
+tags:
+- bug
+title: 'Bugfix: set/remove-ID als ein Pfadsegment escapen; Query-Werte konsistent
+  als UTF-8'
+updated: 2026-10-03T02:13:50Z
+---
+
+Rot gepinnt in t/15-encoding.t (Karte 10). (1) set/remove: # ? % in der ID landen roh im Pfad -> PATCH/DELETE auf falschen Record (vlan#1 -> /rest/interface/vlan). Fix: ID als ein Segment escapen, * bleibt literal. (2) _uri: gleicher Text ergibt mit/ohne utf8-Flag verschiedene URLs (%FC vs %C3%BC). Fix: Werte als Zeichen behandeln und UTF-8-kodieren, konsistent zum JSON-Body.
+
+2026-10-03 02:07 Baseline: prove -lr t/ red only in t/15-encoding.t (14/29: utf8-flag query, set/remove id with # ? %). Probe: the path has the same utf8-flag inconsistency as the query (URI->new on 'B\xfcro' gives %FC unflagged, %C3%BC flagged; same in get() paths and set/remove ids). Plan: _uri encodes base_url.path and every query key/value to UTF-8 bytes (character-string contract, like the JSON body); set/remove escape only % # ? in the id (_segment), * and / untouched, space/non-ASCII left to URI.
+
+2026-10-03 02:08 Done (uncommitted, worktree mock-tests-and-seam). lib/WWW/MikroTik.pm: new _segment($id) escapes only % # ? (-> %25 %23 %3F) and is used by set/remove; * and / untouched, space/non-ASCII left to URI. _uri encodes base_url.path and every query key/value with Encode::encode('UTF-8') before URI -> same URL whatever the utf8 flag (path was affected too: get('/interface/B\xfcro') gave %FC unflagged vs %C3%BC flagged; same for set/remove ids). Caller-built paths in get/request are not segment-escaped (request('GET','/ip/address?x=y') unchanged). cpanfile: requires 'Encode' (also covers t/15-encoding.t's use of it). POD on request/set/remove updated. Tests: 14 pinned subtests in t/15-encoding.t green; added 2 regression subtests there (get path and set/remove id, flagged vs unflagged), verified red against HEAD's lib. prove -lr t/: 9 files, 131 tests, PASS. Open for maintainer: whether '/' in an id gets escaped (left as today, untested).
+
+Commit fc7a2ac
