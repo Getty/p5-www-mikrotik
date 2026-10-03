@@ -28,3 +28,8 @@ Revision history for WWW-MikroTik
     - The request path and query keys and values are character strings,
       encoded as UTF-8 like the JSON body: the same text gives the same URL
       whatever Perl's internal string representation
+    - build_request and parse_response: the two halves of request, for
+      transports that send the HTTP::Request themselves
+      (Net::Async::MikroTik); every verb returns exactly what request
+      returns, so a subclass overriding request swaps the transport for all
+      verbs

@@ -55,7 +55,11 @@ here. RouterOS console commands map onto this module one for one:
 The left-hand name of each pair is the RouterOS-flavored method (flat
 C<< key => value >> arguments, the record C<.id> as its own argument), the
 right-hand one the plain HTTP verb underneath (full path, hashref body). All
-of them go through L</request>.
+of them go through L</request> and return exactly what it returns, which is
+in turn L</build_request>, the C<ua>, and L</parse_response> in a row. Those
+are the two seams: swap C<ua> for another blocking HTTP client, or override
+C<request> in a subclass to change the transport - asynchronous included -
+for every verb at once.
 
 Every RouterOS value is a string in both directions - C<"disabled":"false">,
 C<"cpu-count":"16">. This module does not convert anything, in either direction:
@@ -223,10 +227,13 @@ sub _build_ua {
 
 =attr ua
 
-Lazily built L<LWP::UserAgent>. This is the extension seam: anything that
-responds to C<< ->request($http_request) >> with an L<HTTP::Response> works
-here in its place - which is how the test suite runs the whole client
-against a mock user agent without ever touching a router.
+Lazily built L<LWP::UserAgent>. This is the extension seam for a blocking
+client: anything that responds to C<< ->request($http_request) >> with an
+L<HTTP::Response> works here in its place - which is how the test suite runs
+the whole client against a mock user agent without ever touching a router.
+A transport that cannot answer synchronously (an event loop's HTTP client)
+does not go here; it overrides L</request> in a subclass instead and uses
+L</build_request> and L</parse_response> around its own send.
 
 C<timeout> and C<verify_ssl> are only applied when this default is built; an
 object passed in as C<ua> is used exactly as it is.
@@ -241,26 +248,8 @@ sub _build__json { JSON::MaybeXS->new( canonical => 1, convert_blessed => 1, utf
 
 sub request {
   my ( $self, $method, $path, $body, %query ) = @_;
-  my $uri = $self->_uri($path, %query);
-  my $req = HTTP::Request->new($method => $uri);
-  $req->authorization_basic($self->user, $self->password);
-  $log->debug($method.' '.$self->_uri($path, %{ $self->_masked({ %query }) })->as_string)
-    if $log->is_debug;
-  if (defined $body) {
-    $req->content_type('application/json');
-    $req->content($self->_json->encode($body));
-    $log->debug('Body: '.$self->_json->encode($self->_masked($body)))
-      if $log->is_debug;
-  }
-  my $res = $self->ua->request($req);
-  $log->info($method.' '.$path.' -> '.$res->code);
-  $self->_croak_response($res) if $res->code >= 400;
-  my $content = $res->content;
-  return unless defined $content && length $content;
-  my $data;
-  return $data if eval { $data = $self->_json->decode($content); 1 };
-  ( my $reason = $@ ) =~ s/\A(.*) at .+? line \d+\.?\s*\z/$1/s;
-  $self->_croak($res->status_line.': response body is not JSON: '.$reason);
+  my $req = $self->build_request($method, $path, $body, %query);
+  return $self->parse_response($self->ua->request($req), $method, $path);
 }
 
 =method request
@@ -299,6 +288,73 @@ C<< WWW::MikroTik: <status line>: response body is not JSON: <reason> >>.
 Returns the decoded JSON response - an arrayref of records or a single
 hashref, depending on the call. An empty response body is not an error: it
 returns C<undef> in scalar context and the empty list in list context.
+
+Underneath it is exactly
+C<< $self->parse_response($self->ua->request($self->build_request(...)), $method, $path) >>
+- see L</build_request> and L</parse_response>. Every verb below (C<get>,
+C<put>, C<patch>, C<delete>, C<post>, C<list>, C<add>, C<set>, C<remove>,
+C<cmd>, C<print>) returns exactly what C<< $self->request(...) >> returns,
+with no post-processing of its own. That is a promise, not an accident: a
+subclass that overrides C<request> changes the transport for every verb at
+once and keeps all of their path and argument handling - for example a
+C<request> that sends the result of L</build_request> with an asynchronous
+client and returns a future of L</parse_response>.
+
+=cut
+
+sub build_request {
+  my ( $self, $method, $path, $body, %query ) = @_;
+  my $req = HTTP::Request->new($method => $self->_uri($path, %query));
+  $req->authorization_basic($self->user, $self->password);
+  $log->debug($method.' '.$self->_uri($path, %{ $self->_masked({ %query }) })->as_string)
+    if $log->is_debug;
+  if (defined $body) {
+    $req->content_type('application/json');
+    $req->content($self->_json->encode($body));
+    $log->debug('Body: '.$self->_json->encode($self->_masked($body)))
+      if $log->is_debug;
+  }
+  return $req;
+}
+
+=method build_request
+
+    my $req = $mt->build_request('PATCH', '/ip/address/*1A', { comment => 'uplink' });
+
+The first half of L</request>, with the same arguments. Returns the
+L<HTTP::Request> that L</request> hands to C<ua>: the URL built from
+C<base_url>, C<$path> and C<%query> as described there, HTTP Basic auth with
+C<user>/C<password>, and - only when C<$body> is defined - a
+C<Content-Type: application/json> header with the canonical JSON encoding
+of C<$body> as UTF-8 bytes. Nothing is sent. The two C<debug> log lines
+(request line and body, secrets masked as described in L</DESCRIPTION>) are
+written here, because they describe what was built.
+
+=cut
+
+sub parse_response {
+  my ( $self, $res, $method, $path ) = @_;
+  $log->info($method.' '.$path.' -> '.$res->code);
+  $self->_croak_response($res) if $res->code >= 400;
+  my $content = $res->content;
+  return unless defined $content && length $content;
+  my $data;
+  return $data if eval { $data = $self->_json->decode($content); 1 };
+  ( my $reason = $@ ) =~ s/\A(.*) at .+? line \d+\.?\s*\z/$1/s;
+  $self->_croak($res->status_line.': response body is not JSON: '.$reason);
+}
+
+=method parse_response
+
+    my $decoded = $mt->parse_response($http_response, 'GET', '/ip/address');
+
+The second half of L</request>. Takes the L<HTTP::Response> to a request
+for C<$method> and C<$path> - both are only used for the C<info> log line
+C<< <method> <path> -> <status> >> - and returns or C<croak>s exactly as
+described under L</request>: the decoded JSON; the empty list, or C<undef>
+in scalar context, for an empty body; a C<croak> for a status of 400 or
+higher or for a body that is not JSON, with the C<croak> message also logged
+at C<error>.
 
 =cut
 
