@@ -12,6 +12,8 @@ use JSON::MaybeXS;
 use Test::WWW::MikroTik::MockUA;
 use WWW::MikroTik;
 
+binmode( $_, ':encoding(UTF-8)' ) for map { Test::More->builder->$_ } qw( output failure_output todo_output );
+
 # What URI makes of query values and path segments, and what the JSON body
 # looks like on the wire for non-ASCII data. The query expectations pin what
 # URI produces today (form-encoding: ',' -> %2C, '/' -> %2F, ' ' -> '+').
