@@ -22,3 +22,9 @@ Revision history for WWW-MikroTik
       secret, token or psk, or is key or ends in -key (private-key,
       pre-shared-key, auth-key, ...), except public-key; the request itself
       is sent unchanged
+    - set and remove send the id as a single path segment: %, # and ? are
+      escaped, so set('/interface', 'vlan#1', ...) addresses vlan#1 and not
+      vlan; the * of an .id stays literal
+    - The request path and query keys and values are character strings,
+      encoded as UTF-8 like the JSON body: the same text gives the same URL
+      whatever Perl's internal string representation

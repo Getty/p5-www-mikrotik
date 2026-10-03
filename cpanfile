@@ -1,4 +1,5 @@
 requires 'Carp';
+requires 'Encode';
 requires 'HTTP::Request';
 requires 'JSON::MaybeXS';
 requires 'Log::Any';

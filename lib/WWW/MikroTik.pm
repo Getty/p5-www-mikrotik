@@ -4,6 +4,7 @@ package WWW::MikroTik;
 
 use Moo;
 use Carp qw( croak );
+use Encode qw( encode );
 use HTTP::Request;
 use JSON::MaybeXS;
 use Log::Any qw( $log );
@@ -276,7 +277,15 @@ decodes these as expected: a C<.proplist> sent as C<address%2Cinterface>
 returned only the requested keys, and a filter on C<address=10.0.0.1/24> sent
 with C<%2F> matched exactly that record (confirmed against RouterOS 7.18.2).
 The path is not touched beyond what L<URI> escapes on its own, so a C<*>
-stays a C<*>.
+stays a C<*> - and a C<?> or C<#> in it still starts a query string or a
+fragment: C<$path> is URL syntax here, not a single segment (L</set> and
+L</remove> escape their C<$id> for you).
+
+The path, the query keys and the query values are character strings, like
+the values in C<$body>: they are encoded to UTF-8 before L<URI> percent-escapes
+them, so C<"B\x{fc}ro"> goes out as C<B%C3%BCro> whatever Perl's internal
+representation of that string is. Pass decoded text, not UTF-8 bytes - bytes
+are encoded a second time, exactly as they would be in the JSON body.
 
 Sends HTTP Basic auth with C<user>/C<password> on every request. A response
 status of 400 or higher C<croak>s with
@@ -409,7 +418,7 @@ router rejects anything else.
 
 sub set {
   my ( $self, $path, $id, %data ) = @_;
-  return $self->patch($path.'/'.$id, { %data });
+  return $self->patch($path.'/'.$self->_segment($id), { %data });
 }
 
 =method set
@@ -417,9 +426,13 @@ sub set {
     $mt->set('/ip/address', $rec->{'.id'}, comment => 'uplink');
 
 C<< patch("$path/$id", \%data) >> - console C<set>. C<$id> is the record's
-C<.id> (C<*1A>) or, on menus that accept it, its name; it goes into the URL
-path exactly as given - URL-encoding the leading C<*> turns a normal
-request into a 404 that looks like "record not found". Returns the full
+C<.id> (C<*1A>) or, on menus that accept it, its name, and it is one path
+segment: C<%>, C<#> and C<?> in it are escaped (C<%25>, C<%23>, C<%3F>), so
+C<vlan#1> addresses the record C<vlan#1> and not C<vlan>. A space and
+non-ASCII characters are escaped as anywhere else in the path (C<%20>, UTF-8),
+and the C<*> of an C<.id> stays a literal C<*> - URL-encoding it turns a normal
+request into a 404 that looks like "record not found". Pass C<$id> exactly as
+the router returned it, never URL-encoded yourself. Returns the full
 updated record, not just the changed fields, with the same
 all-values-are-strings contract as C<list>.
 
@@ -427,7 +440,7 @@ all-values-are-strings contract as C<list>.
 
 sub remove {
   my ( $self, $path, $id ) = @_;
-  return $self->delete($path.'/'.$id);
+  return $self->delete($path.'/'.$self->_segment($id));
 }
 
 =method remove
@@ -435,7 +448,8 @@ sub remove {
     $mt->remove('/ip/address', $rec->{'.id'});
 
 C<< delete("$path/$id") >> - console C<remove>. C<$id> is the C<.id>
-(C<*1A>), used unencoded exactly as under C<set>. Returns nothing on
+(C<*1A>) or name, one path segment escaped exactly as under C<set> - the
+C<*> stays literal, C<%>, C<#> and C<?> are escaped. Returns nothing on
 success.
 
 =cut
@@ -491,14 +505,27 @@ passes through unchanged.
 
 #### Internals
 
+# Path, query keys and query values are character strings: encoded to UTF-8
+# here, so the URL does not depend on Perl's internal utf8 flag (URI escapes
+# an unflagged "\x{fc}" as %FC, a flagged one as %C3%BC).
 sub _uri {
   my ( $self, $path, %query ) = @_;
   $path = '/'.$path unless $path =~ m{\A/};
-  my $uri = URI->new($self->base_url.$path);
-  $uri->query_form(map {
+  my $uri = URI->new(encode('UTF-8', $self->base_url.$path));
+  $uri->query_form(map { encode('UTF-8', $_) } map {
     ( $_ => ref $query{$_} eq 'ARRAY' ? join(',', @{$query{$_}}) : $query{$_} )
   } sort keys %query) if %query;
   return $uri;
+}
+
+# A record id as one path segment for set/remove: escape what URI would
+# otherwise read as URL syntax ('#' fragment, '?' query) or as an existing
+# escape ('%'). '*' stays literal - RouterOS answers %2A with a 404. Space and
+# non-ASCII are left to _uri/URI; '/' is passed through as it is.
+sub _segment {
+  my ( $self, $id ) = @_;
+  ( my $segment = $id ) =~ s/([%#?])/sprintf('%%%02X', ord $1)/ge;
+  return $segment;
 }
 
 sub _croak_response {

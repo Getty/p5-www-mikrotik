@@ -121,4 +121,86 @@ subtest 'body bytes are canonical (sorted-key) JSON' => sub {
     'keys serialized alphabetically regardless of insertion order into the hash';
 };
 
+subtest 'Basic auth header: exact bytes, and the defaults admin / empty password' => sub {
+  my $ua = Test::WWW::MikroTik::MockUA->new(
+    routes => { 'GET /rest/ip/address' => [] }
+  );
+
+  _mt(ua => $ua)->request('GET', '/ip/address', undef);
+  is $ua->requests->[0]->header('Authorization'), 'Basic YWRtaW46czNjcjN0',
+    'base64("admin:s3cr3t")';
+
+  my $default = WWW::MikroTik->new( host => 'router.example', ua => $ua );
+  $default->request('GET', '/ip/address', undef);
+  is $ua->requests->[1]->header('Authorization'), 'Basic YWRtaW46', 'base64("admin:")';
+  my ( $user, $password ) = $ua->requests->[1]->authorization_basic;
+  is $user, 'admin', 'default user is admin';
+  is $password, '', 'default password is the empty string';
+};
+
+subtest 'every HTTP method reaches the wire as given, auth on all of them' => sub {
+  my $routes = { map { ( $_.' /rest/ip/address' => {} ) } qw( GET PUT PATCH DELETE POST ) };
+  my $ua = Test::WWW::MikroTik::MockUA->new( routes => $routes );
+  my $mt = _mt(ua => $ua);
+
+  $mt->request($_, '/ip/address', undef) for qw( GET PUT PATCH DELETE POST );
+
+  is_deeply [ map { $_->method } @{ $ua->requests } ], [ qw( GET PUT PATCH DELETE POST ) ],
+    'methods in order, unchanged';
+  is $_->header('Authorization'), 'Basic YWRtaW46czNjcjN0', $_->method.' carries auth'
+    for @{ $ua->requests };
+  is $_->content, '', $_->method.' with an undef body sends nothing'
+    for @{ $ua->requests };
+  ok !defined $_->header('Content-Type'), $_->method.' with an undef body has no Content-Type'
+    for @{ $ua->requests };
+};
+
+subtest 'an empty hashref is still a body: {} and Content-Type' => sub {
+  my $ua = Test::WWW::MikroTik::MockUA->new(
+    routes => { 'POST /rest/system/resource/print' => [] }
+  );
+  _mt(ua => $ua)->request('POST', '/system/resource/print', {});
+
+  my $req = $ua->requests->[0];
+  is $req->content, '{}', 'empty object';
+  is $req->header('Content-Type'), 'application/json', 'Content-Type present';
+};
+
+subtest 'query string and body together' => sub {
+  my $ua = Test::WWW::MikroTik::MockUA->new(
+    routes => { 'POST /rest/ip/address' => {} }
+  );
+  _mt(ua => $ua)->request('POST', '/ip/address', { a => '1' }, b => '2');
+
+  my $req = $ua->requests->[0];
+  is $req->uri->as_string, 'https://router.example/rest/ip/address?b=2', 'query in the URL';
+  is $req->content, '{"a":"1"}', 'body in the body';
+};
+
+subtest 'request() returns the decoded response' => sub {
+  my $ua = Test::WWW::MikroTik::MockUA->new(
+    routes => {
+      'GET /rest/interface/ether1' => { '.id' => '*1', name => 'ether1', type => 'ether' },
+      'GET /rest/interface'        => [ { '.id' => '*1', name => 'ether1' } ]
+    }
+  );
+  my $mt = _mt(ua => $ua);
+
+  is_deeply $mt->request('GET', '/interface/ether1', undef),
+    { '.id' => '*1', name => 'ether1', type => 'ether' }, 'hashref for a single record';
+  is_deeply $mt->request('GET', '/interface', undef), [ { '.id' => '*1', name => 'ether1' } ],
+    'arrayref for a menu';
+};
+
+subtest 'a base_url with a path prefix keeps it' => sub {
+  my $ua = Test::WWW::MikroTik::MockUA->new(
+    routes => { 'GET /gw/rest/ip/address' => [] }
+  );
+  my $mt = _mt(ua => $ua, base_url => 'https://router.example/gw/rest');
+  $mt->request('GET', 'ip/address', undef);
+
+  is $ua->requests->[0]->uri->as_string, 'https://router.example/gw/rest/ip/address',
+    'prefix kept, slash added';
+};
+
 done_testing;
