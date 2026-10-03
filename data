@@ -1,0 +1,13 @@
+---
+class: standard
+created: 2026-10-03T02:35:31Z
+id: 13
+priority: medium
+status: backlog
+tags:
+- question
+title: 'Entscheidung: 3xx-Antworten und Redirects (LWP folgt GET-Redirects mit Basic-Auth)'
+updated: 2026-10-03T02:35:31Z
+---
+
+parse_response behandelt 3xx als Erfolg (Nicht-JSON-Body croakt, leerer Body = kein Wert). Das Standard-LWP folgt GET-Redirects und sendet den Basic-Auth-Header mit; Net::Async::MikroTik setzt max_redirects 0. Getty entscheidet: angleichen (LWP max_redirect 0 bzw. 3xx als Fehler) oder so lassen.
