@@ -1,0 +1,21 @@
+---
+claimed_at: 2026-10-03T02:13:34Z
+claimed_by: test-writer
+class: standard
+completed: 2026-10-03T02:13:34Z
+created: 2026-10-03T01:58:09Z
+id: 10
+priority: high
+started: 2026-10-03T02:00:17Z
+status: done
+tags:
+- tests
+title: 'Mock-Testabdeckung: jede öffentliche Methode und jeder Fehlerpfad'
+updated: 2026-10-03T02:13:46Z
+---
+
+Auftrag Getty (Hub): deutlich mehr Offline-Tests per MockUA. Jede Verb-Methode (list/add/set/remove/cmd/print, get/put/patch/delete/post, request) mit exakter Prüfung von Methode, URL, Query, Header (Basic-Auth, Content-Type), JSON-Body; Konstruktor-Varianten (scheme/port/base_url/verify_ssl/timeout, eigener ua, Defaults); Antwortformen (Array, Hash, leerer Body skalar/Liste, 204, Nicht-JSON-2xx, Fehlerobjekt 400/401/404/500, Fehler ohne JSON-Body, Timeout/Transportfehler); Query-Encoding (Komma/Slash/Sonderzeichen/UTF-8), .proplist Arrayref/String, .id mit Sonderzeichen; print proplist/query-Kombinationen; Logging-Maskierung an allen Feldnamen-Varianten. Fixtures aus rest-api.md / Live-Befund.
+
+2026-10-03 02:05 Added t/05-constructor.t and t/15-encoding.t, extended 10/20/30/40/50. All green except 14 red subtests in t/15-encoding.t by design: set/remove id escaping for hash, question mark, percent, pre-encoded star, combos, plus one utf8-flag inconsistency in query values. Worker to fix in lib.
+
+Commit fc7a2ac
