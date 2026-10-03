@@ -488,7 +488,8 @@ C<vlan#1> addresses the record C<vlan#1> and not C<vlan>. A space and
 non-ASCII characters are escaped as anywhere else in the path (C<%20>, UTF-8),
 and the C<*> of an C<.id> stays a literal C<*> - URL-encoding it turns a normal
 request into a 404 that looks like "record not found". Pass C<$id> exactly as
-the router returned it, never URL-encoded yourself. Returns the full
+the router returned it, never URL-encoded yourself. A C</> in C<$id> is not
+escaped and adds path segments. Returns the full
 updated record, not just the changed fields, with the same
 all-values-are-strings contract as C<list>.
 
@@ -620,6 +621,8 @@ sub _masked {
 =over 4
 
 =item * L<RouterOS REST API|https://help.mikrotik.com/docs/spaces/ROS/pages/47579162/REST+API> - the vendor's own reference
+
+=item * L<Net::Async::MikroTik> - the L<IO::Async>/L<Future> client built on L</build_request> and L</parse_response>
 
 =item * L<LWP::UserAgent> - the default HTTP client; see the C<ua> attribute to swap it out
 

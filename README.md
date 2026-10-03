@@ -71,6 +71,12 @@ used as it is.
 | `cmd($path, %args)` / `post($path, \%args)` | `POST` | any command word |
 | `print($path, proplist => ..., query => ..., %args)` | `POST` to `$path/print` | `print` |
 | `request($method, $path, $body, %query)` | any | the core every method above wraps |
+| `build_request(...)` / `parse_response($res, $method, $path)` | | the two halves of `request`, for a transport that sends the `HTTP::Request` itself |
+
+Every method above returns exactly what `request` returns, so a subclass that
+overrides `request` swaps the transport for all of them — that is how
+[Net::Async::MikroTik](https://metacpan.org/pod/Net::Async::MikroTik) runs the
+same calls on `IO::Async`.
 
 ### Reading
 
@@ -121,8 +127,15 @@ Every value is a string in both directions — `"disabled":"false"`, never a
 JSON boolean. The module converts nothing: compare with `eq`, send
 `'true'`/`'false'`.
 
-A record's `.id` looks like `*1A` and goes into the URL path exactly as
-given, unencoded.
+A record's `.id` looks like `*1A`; the `*` goes into the URL path literally,
+never as `%2A`. `set` and `remove` send `$id` as one path segment: `%`, `#`
+and `?` are escaped, so `set('/interface', 'vlan#1', ...)` addresses `vlan#1`
+and not `vlan`; a `/` in `$id` is not escaped. A path you build yourself
+(`get`, `request`, ...) is not escaped beyond what `URI` does on its own, so a
+`?` or `#` in it still starts a query string or a fragment.
+
+Paths, query keys and query values are character strings, encoded as UTF-8
+like the JSON body.
 
 ## Errors
 
