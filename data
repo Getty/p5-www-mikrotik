@@ -1,0 +1,24 @@
+---
+claimed_at: 2026-10-03T02:13:42Z
+claimed_by: worker
+class: standard
+completed: 2026-10-03T02:13:42Z
+created: 2026-10-03T01:58:12Z
+id: 11
+priority: high
+started: 2026-10-03T02:08:23Z
+status: done
+tags:
+- seam
+- async
+title: Naht build_request/parse_response für Net::Async::MikroTik
+updated: 2026-10-03T02:13:54Z
+---
+
+request() in build_request (HTTP::Request bauen, debug-Log) und parse_response (Status/JSON/Croak, info/error-Log) trennen, damit Net::Async::MikroTik denselben Semantik-Code mit Net::Async::HTTP nutzt. Öffentliche API bleibt; request = parse_response(ua->request(build_request)). Mit Tests.
+
+Entscheidung (Orchestrator): Naht = öffentliche, dokumentierte build_request($method,$path,$body,%query) -> HTTP::Request (inkl. debug-Log mit Maskierung) und parse_response($res,$method,$path) -> dekodiert/croak (info/error-Log); request() = parse_response(ua->request(build_request), ...). Zusätzlich dokumentierter Vertrag: jede Verb-Methode (get..print) gibt exakt zurück, was $self->request liefert, ohne Nachbearbeitung -> eine Unterklasse, die nur request überschreibt, tauscht den Transport für alle Verben (so nutzt Net::Async::MikroTik die Pfad-/Verb-Semantik ohne Duplikat). HTTP::Request/HTTP::Response sind der Austauschtyp (Net::Async::HTTP spricht beide nativ) – kein eigenes HTTPResponse-Objekt wie bei Forgejo/Hetzner.
+
+2026-10-03 02:11 Done, uncommitted, in worktree mock-tests-and-seam on top of k12. New public build_request and parse_response in lib/WWW/MikroTik.pm, request is now parse_response of ua request of build_request; code moved verbatim, existing tests unchanged and green. POD for both methods plus the verb contract on request, DESCRIPTION and the ua attr. New t/60-seam.t, git added, 11 subtests: built request exact and byte-identical to what request sends, ua never called; parse_response returns and croaks like request incl. croak location; a Moo subclass overriding request proves all 11 verbs return its value unchanged in scalar and list context with the right method, path, body and query; a subclass rebuilding request from the two halves behaves identically; debug lines from build_request, info and error from parse_response. prove -lr t: 10 files, 142 tests, PASS.
+
+Commit 18d0d87
