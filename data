@@ -1,0 +1,13 @@
+---
+class: standard
+created: 2026-10-03T02:35:35Z
+id: 14
+priority: low
+status: backlog
+tags:
+- question
+title: 'Entscheidung: / in set/remove-ID escapen?'
+updated: 2026-10-03T02:35:35Z
+---
+
+_segment escapt nur % # ?. Ein / in der ID erzeugt weitere Pfadsegmente. Ob RouterOS %2F im Pfad als / in einem Namen dekodiert, ist nicht live geprüft. Ebenso offen: + für Leerzeichen in Query-Werten (URI query_form) nicht live verifiziert.
